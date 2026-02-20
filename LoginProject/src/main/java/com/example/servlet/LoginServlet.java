@@ -15,7 +15,7 @@ import java.util.List;
 @WebServlet("/login")
 public class LoginServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private static final String USERS_FILE = "/users.txt";
+//    private static final String USERS_FILE = "/users.txt";
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
@@ -49,20 +49,39 @@ public class LoginServlet extends HttpServlet {
         return false;
     }
 
+ // Replace readUsersFromFile() method
     private List<String> readUsersFromFile() {
         List<String> users = new ArrayList<>();
-        String filePath = getServletContext().getRealPath(USERS_FILE);
+        String filePath = getFilePath();  // <-- CHANGE THIS
+        
+        File file = new File(filePath);
+        if (!file.exists()) {
+            return users;
+        }
         
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 users.add(line);
             }
-        } catch (FileNotFoundException e) {
-            // File doesn't exist yet
         } catch (IOException e) {
             e.printStackTrace();
         }
         return users;
+    }
+
+    // ADD this method
+    private String getFilePath() {
+        String path = getServletContext().getRealPath("/WEB-INF/users.txt");
+        File file = new File(path);
+        if (!file.exists()) {
+            try {
+                file.getParentFile().mkdirs();
+                file.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return path;
     }
 }

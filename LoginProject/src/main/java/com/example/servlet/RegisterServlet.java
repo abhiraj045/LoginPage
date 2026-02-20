@@ -14,7 +14,7 @@ import java.util.List;
 @WebServlet("/register")
 public class RegisterServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private static final String USERS_FILE = "/users.txt";
+//    private static final String USERS_FILE = "/users.txt";
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -80,24 +80,26 @@ public class RegisterServlet extends HttpServlet {
     // Read all users from file
     private List<String> readUsersFromFile() {
         List<String> users = new ArrayList<>();
-        String filePath = getServletContext().getRealPath(USERS_FILE);
+        String filePath = getFilePath();  
+        
+        File file = new File(filePath);
+        if (!file.exists()) {
+            return users;  // Return empty list if file doesn't exist
+        }
         
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 users.add(line);
             }
-        } catch (FileNotFoundException e) {
-            // File doesn't exist yet - that's ok
         } catch (IOException e) {
             e.printStackTrace();
         }
         return users;
     }
 
-    // Save user to file
     private void saveUserToFile(User user) {
-        String filePath = getServletContext().getRealPath(USERS_FILE);
+        String filePath = getFilePath();  
         
         try (FileWriter fw = new FileWriter(filePath, true);
              BufferedWriter bw = new BufferedWriter(fw);
@@ -106,5 +108,20 @@ public class RegisterServlet extends HttpServlet {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    
+    // NEW METHOD - Creates file if it doesn't exist
+    private String getFilePath() {
+        String path = getServletContext().getRealPath("/WEB-INF/users.txt");
+        File file = new File(path);
+        if (!file.exists()) {
+            try {
+                file.getParentFile().mkdirs();  // Create directories if needed
+                file.createNewFile();           // Create the file
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return path;
     }
 }
